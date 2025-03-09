@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Page</title>
+    <style>
+        /* Add custom styling for message spacing */
+        .message {
+            margin-bottom: 20px; /* Adds space between each AI response */
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ccc; /* Optional: adds a separator line between messages */
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+    <p>You are now logged in and this is your personalized page.</p>
+    <div id="messages"></div>
+    
+    <!-- Form to send a message to the AI -->
+    <h2>Send a message to your agent:</h2>
+    <form id="form" method="POST">
+        <label for="message">Message:</label><br>
+        <textarea id="message" name="message" rows="4" cols="50" required></textarea><br><br>
+        <button type="submit">Send Message</button>
+    </form>
+
+    <script>
+        document.getElementById('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const message = document.getElementById('message').value;
+
+            fetch('/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': "application/json"
+                },
+                body: JSON.stringify({ message })
+            })
+            .then(res => res.json())
+            .then(data => {
+                data.messages.forEach(message => {
+                    if (message.message_type !== 'assistant_message') {
+                        return;
+                    }
+
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message'); // Add the message class to the div for spacing
+                    messageDiv.innerHTML = message.content;
+                    document.getElementById('messages').appendChild(messageDiv);
+                })
+            });
+        })        
+    </script>
+    
+    <br><br>
+
+    <!-- Display AI's response after sending the message -->
+    {% if 'response' in session %}
+        <h2>AI's Response:</h2>
+        <p>{{ session['response'] }}</p>
+        {% with response = session.pop('response') %}
+        {% endwith %}
+    {% endif %}
+
+    <br><br>
+
+    <!-- Logout link -->
+    <a href="/logout">Log out</a>
+</body>
+</html>
